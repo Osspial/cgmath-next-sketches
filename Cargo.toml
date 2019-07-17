@@ -1,0 +1,2 @@
+[workspace]
+members = ["./experiment-1-const-generics", "./experiment-2-regular-generics"]

@@ -23,11 +23,6 @@ macro_rules! vector_struct {
 
         impl<T> $Vector<T> {
             pub const LEN: usize = $len;
-
-            #[doc(hidden)]
-            pub fn unwrap_macro_bootstrap(self) -> Self {
-                self
-            }
         }
     };
 }
@@ -56,24 +51,23 @@ vector_struct!(struct Vector2(x, y): 2);
 vector_struct!(struct Vector3(x, y, z): 3);
 vector_struct!(struct Vector4(x, y, z, w): 4);
 
-#[repr(transparent)]
-#[doc(hidden)]
-pub struct MacroBootstrap<T>(T);
+vector_concat!([T; 0], T => [T; 1]);
+vector_concat!([T; 0], Vector2<T> => [T; 2]);
+vector_concat!([T; 0], Vector3<T> => [T; 3]);
+vector_concat!([T; 0], Vector4<T> => [T; 4]);
+vector_concat!([T; 1], T => [T; 2]);
+vector_concat!([T; 1], Vector2<T> => [T; 3]);
+vector_concat!([T; 1], Vector3<T> => [T; 4]);
+vector_concat!([T; 2], T => [T; 3]);
+vector_concat!([T; 2], Vector2<T> => [T; 4]);
+vector_concat!([T; 3], T => [T; 4]);
 
-impl<T> MacroBootstrap<T> {
-    pub fn unwrap_macro_bootstrap(self) -> T {
-        self.0
-    }
-}
-
-vector_concat!(MacroBootstrap<T>, T => Vector2<T>);
-vector_concat!(MacroBootstrap<T>, Vector2<T> => Vector3<T>);
-vector_concat!(MacroBootstrap<T>, Vector3<T> => Vector4<T>);
-vector_concat!(T, Vector2<T> => Vector3<T>);
-vector_concat!(T, Vector3<T> => Vector4<T>);
-vector_concat!(Vector2<T>, T => Vector3<T>);
-vector_concat!(Vector2<T>, Vector2<T> => Vector4<T>);
-vector_concat!(Vector3<T>, T => Vector4<T>);
+vector_concat!([T; 0], [T; 2] => [T; 2]);
+vector_concat!([T; 0], [T; 3] => [T; 3]);
+vector_concat!([T; 0], [T; 4] => [T; 4]);
+vector_concat!([T; 1], [T; 2] => [T; 3]);
+vector_concat!([T; 1], [T; 3] => [T; 4]);
+vector_concat!([T; 2], [T; 2] => [T; 4]);
 
 macro_rules! array_or_expr {
     ($item:expr) => {{$item}};

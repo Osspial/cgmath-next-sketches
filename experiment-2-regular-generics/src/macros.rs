@@ -3,12 +3,12 @@ macro_rules! vector {
     ([$tt:tt]) => {{
         vector![$tt]
     }};
-    ($first:expr $(, $item:expr)* $(,)?) => {{
-        let vector = $crate::MacroBootstrap($first);
+    ($($item:expr),* $(,)?) => {{
+        let vector: [_; 0] = [];
         $(
             let vector = $crate::traits::Concat::concat(vector, $item);
         )*
-        vector.unwrap_macro_bootstrap()
+        $crate::traits::ToVector::to_vector(vector)
     }};
 }
 

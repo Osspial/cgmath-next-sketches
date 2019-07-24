@@ -1,4 +1,3 @@
-#![feature(specialization)]
 #[macro_use]
 mod macros;
 pub mod traits;
@@ -23,25 +22,19 @@ macro_rules! vector_struct {
 
         impl<T> $Vector<T> {
             pub const LEN: usize = $len;
-        }
-    };
-}
 
-macro_rules! vector_concat {
-    ($lhs:ty, $rhs:ty => $out:ty) => {
-        impl<T> traits::Concat<$rhs> for $lhs {
-            type Output = $out;
+            pub fn new($($dim: T),+) -> $Vector<T> {
+                Self {
+                    $($dim),+
+                }
+            }
 
-            fn concat(self, other: $rhs) -> Self::Output {
-                #[repr(C)]
-                struct Concat<A, B>(A, B);
-
-                assert_eq!(std::mem::size_of::<Concat<$lhs, $rhs>>(), std::mem::size_of::<Self::Output>());
-
-                let concat = Concat(self, other);
-                let out = unsafe{ std::mem::transmute_copy(&concat) };
-                std::mem::forget(concat);
-                out
+            pub fn splat(i: T) -> $Vector<T>
+                where T: Clone
+            {
+                Self {
+                    $($dim: i.clone()),+
+                }
             }
         }
     };
@@ -50,24 +43,6 @@ macro_rules! vector_concat {
 vector_struct!(struct Vector2(x, y): 2);
 vector_struct!(struct Vector3(x, y, z): 3);
 vector_struct!(struct Vector4(x, y, z, w): 4);
-
-vector_concat!([T; 0], T => [T; 1]);
-vector_concat!([T; 0], Vector2<T> => [T; 2]);
-vector_concat!([T; 0], Vector3<T> => [T; 3]);
-vector_concat!([T; 0], Vector4<T> => [T; 4]);
-vector_concat!([T; 1], T => [T; 2]);
-vector_concat!([T; 1], Vector2<T> => [T; 3]);
-vector_concat!([T; 1], Vector3<T> => [T; 4]);
-vector_concat!([T; 2], T => [T; 3]);
-vector_concat!([T; 2], Vector2<T> => [T; 4]);
-vector_concat!([T; 3], T => [T; 4]);
-
-vector_concat!([T; 0], [T; 2] => [T; 2]);
-vector_concat!([T; 0], [T; 3] => [T; 3]);
-vector_concat!([T; 0], [T; 4] => [T; 4]);
-vector_concat!([T; 1], [T; 2] => [T; 3]);
-vector_concat!([T; 1], [T; 3] => [T; 4]);
-vector_concat!([T; 2], [T; 2] => [T; 4]);
 
 macro_rules! array_or_expr {
     ($item:expr) => {{$item}};
@@ -109,26 +84,64 @@ impl_swizzle!{
     xxxx x x x x -> Vector4<T>, xxxy x x x y -> Vector4<T>, xxxz x x x z -> Vector4<T>, xxxw x x x w -> Vector4<T>, xxyx x x y x -> Vector4<T>, xxyy x x y y -> Vector4<T>, xxyz x x y z -> Vector4<T>, xxyw x x y w -> Vector4<T>, xxzx x x z x -> Vector4<T>, xxzy x x z y -> Vector4<T>, xxzz x x z z -> Vector4<T>, xxzw x x z w -> Vector4<T>, xxwx x x w x -> Vector4<T>, xxwy x x w y -> Vector4<T>, xxwz x x w z -> Vector4<T>, xxww x x w w -> Vector4<T>, xyxx x y x x -> Vector4<T>, xyxy x y x y -> Vector4<T>, xyxz x y x z -> Vector4<T>, xyxw x y x w -> Vector4<T>, xyyx x y y x -> Vector4<T>, xyyy x y y y -> Vector4<T>, xyyz x y y z -> Vector4<T>, xyyw x y y w -> Vector4<T>, xyzx x y z x -> Vector4<T>, xyzy x y z y -> Vector4<T>, xyzz x y z z -> Vector4<T>, xyzw x y z w -> Vector4<T>, xywx x y w x -> Vector4<T>, xywy x y w y -> Vector4<T>, xywz x y w z -> Vector4<T>, xyww x y w w -> Vector4<T>, xzxx x z x x -> Vector4<T>, xzxy x z x y -> Vector4<T>, xzxz x z x z -> Vector4<T>, xzxw x z x w -> Vector4<T>, xzyx x z y x -> Vector4<T>, xzyy x z y y -> Vector4<T>, xzyz x z y z -> Vector4<T>, xzyw x z y w -> Vector4<T>, xzzx x z z x -> Vector4<T>, xzzy x z z y -> Vector4<T>, xzzz x z z z -> Vector4<T>, xzzw x z z w -> Vector4<T>, xzwx x z w x -> Vector4<T>, xzwy x z w y -> Vector4<T>, xzwz x z w z -> Vector4<T>, xzww x z w w -> Vector4<T>, xwxx x w x x -> Vector4<T>, xwxy x w x y -> Vector4<T>, xwxz x w x z -> Vector4<T>, xwxw x w x w -> Vector4<T>, xwyx x w y x -> Vector4<T>, xwyy x w y y -> Vector4<T>, xwyz x w y z -> Vector4<T>, xwyw x w y w -> Vector4<T>, xwzx x w z x -> Vector4<T>, xwzy x w z y -> Vector4<T>, xwzz x w z z -> Vector4<T>, xwzw x w z w -> Vector4<T>, xwwx x w w x -> Vector4<T>, xwwy x w w y -> Vector4<T>, xwwz x w w z -> Vector4<T>, xwww x w w w -> Vector4<T>, yxxx y x x x -> Vector4<T>, yxxy y x x y -> Vector4<T>, yxxz y x x z -> Vector4<T>, yxxw y x x w -> Vector4<T>, yxyx y x y x -> Vector4<T>, yxyy y x y y -> Vector4<T>, yxyz y x y z -> Vector4<T>, yxyw y x y w -> Vector4<T>, yxzx y x z x -> Vector4<T>, yxzy y x z y -> Vector4<T>, yxzz y x z z -> Vector4<T>, yxzw y x z w -> Vector4<T>, yxwx y x w x -> Vector4<T>, yxwy y x w y -> Vector4<T>, yxwz y x w z -> Vector4<T>, yxww y x w w -> Vector4<T>, yyxx y y x x -> Vector4<T>, yyxy y y x y -> Vector4<T>, yyxz y y x z -> Vector4<T>, yyxw y y x w -> Vector4<T>, yyyx y y y x -> Vector4<T>, yyyy y y y y -> Vector4<T>, yyyz y y y z -> Vector4<T>, yyyw y y y w -> Vector4<T>, yyzx y y z x -> Vector4<T>, yyzy y y z y -> Vector4<T>, yyzz y y z z -> Vector4<T>, yyzw y y z w -> Vector4<T>, yywx y y w x -> Vector4<T>, yywy y y w y -> Vector4<T>, yywz y y w z -> Vector4<T>, yyww y y w w -> Vector4<T>, yzxx y z x x -> Vector4<T>, yzxy y z x y -> Vector4<T>, yzxz y z x z -> Vector4<T>, yzxw y z x w -> Vector4<T>, yzyx y z y x -> Vector4<T>, yzyy y z y y -> Vector4<T>, yzyz y z y z -> Vector4<T>, yzyw y z y w -> Vector4<T>, yzzx y z z x -> Vector4<T>, yzzy y z z y -> Vector4<T>, yzzz y z z z -> Vector4<T>, yzzw y z z w -> Vector4<T>, yzwx y z w x -> Vector4<T>, yzwy y z w y -> Vector4<T>, yzwz y z w z -> Vector4<T>, yzww y z w w -> Vector4<T>, ywxx y w x x -> Vector4<T>, ywxy y w x y -> Vector4<T>, ywxz y w x z -> Vector4<T>, ywxw y w x w -> Vector4<T>, ywyx y w y x -> Vector4<T>, ywyy y w y y -> Vector4<T>, ywyz y w y z -> Vector4<T>, ywyw y w y w -> Vector4<T>, ywzx y w z x -> Vector4<T>, ywzy y w z y -> Vector4<T>, ywzz y w z z -> Vector4<T>, ywzw y w z w -> Vector4<T>, ywwx y w w x -> Vector4<T>, ywwy y w w y -> Vector4<T>, ywwz y w w z -> Vector4<T>, ywww y w w w -> Vector4<T>, zxxx z x x x -> Vector4<T>, zxxy z x x y -> Vector4<T>, zxxz z x x z -> Vector4<T>, zxxw z x x w -> Vector4<T>, zxyx z x y x -> Vector4<T>, zxyy z x y y -> Vector4<T>, zxyz z x y z -> Vector4<T>, zxyw z x y w -> Vector4<T>, zxzx z x z x -> Vector4<T>, zxzy z x z y -> Vector4<T>, zxzz z x z z -> Vector4<T>, zxzw z x z w -> Vector4<T>, zxwx z x w x -> Vector4<T>, zxwy z x w y -> Vector4<T>, zxwz z x w z -> Vector4<T>, zxww z x w w -> Vector4<T>, zyxx z y x x -> Vector4<T>, zyxy z y x y -> Vector4<T>, zyxz z y x z -> Vector4<T>, zyxw z y x w -> Vector4<T>, zyyx z y y x -> Vector4<T>, zyyy z y y y -> Vector4<T>, zyyz z y y z -> Vector4<T>, zyyw z y y w -> Vector4<T>, zyzx z y z x -> Vector4<T>, zyzy z y z y -> Vector4<T>, zyzz z y z z -> Vector4<T>, zyzw z y z w -> Vector4<T>, zywx z y w x -> Vector4<T>, zywy z y w y -> Vector4<T>, zywz z y w z -> Vector4<T>, zyww z y w w -> Vector4<T>, zzxx z z x x -> Vector4<T>, zzxy z z x y -> Vector4<T>, zzxz z z x z -> Vector4<T>, zzxw z z x w -> Vector4<T>, zzyx z z y x -> Vector4<T>, zzyy z z y y -> Vector4<T>, zzyz z z y z -> Vector4<T>, zzyw z z y w -> Vector4<T>, zzzx z z z x -> Vector4<T>, zzzy z z z y -> Vector4<T>, zzzz z z z z -> Vector4<T>, zzzw z z z w -> Vector4<T>, zzwx z z w x -> Vector4<T>, zzwy z z w y -> Vector4<T>, zzwz z z w z -> Vector4<T>, zzww z z w w -> Vector4<T>, zwxx z w x x -> Vector4<T>, zwxy z w x y -> Vector4<T>, zwxz z w x z -> Vector4<T>, zwxw z w x w -> Vector4<T>, zwyx z w y x -> Vector4<T>, zwyy z w y y -> Vector4<T>, zwyz z w y z -> Vector4<T>, zwyw z w y w -> Vector4<T>, zwzx z w z x -> Vector4<T>, zwzy z w z y -> Vector4<T>, zwzz z w z z -> Vector4<T>, zwzw z w z w -> Vector4<T>, zwwx z w w x -> Vector4<T>, zwwy z w w y -> Vector4<T>, zwwz z w w z -> Vector4<T>, zwww z w w w -> Vector4<T>, wxxx w x x x -> Vector4<T>, wxxy w x x y -> Vector4<T>, wxxz w x x z -> Vector4<T>, wxxw w x x w -> Vector4<T>, wxyx w x y x -> Vector4<T>, wxyy w x y y -> Vector4<T>, wxyz w x y z -> Vector4<T>, wxyw w x y w -> Vector4<T>, wxzx w x z x -> Vector4<T>, wxzy w x z y -> Vector4<T>, wxzz w x z z -> Vector4<T>, wxzw w x z w -> Vector4<T>, wxwx w x w x -> Vector4<T>, wxwy w x w y -> Vector4<T>, wxwz w x w z -> Vector4<T>, wxww w x w w -> Vector4<T>, wyxx w y x x -> Vector4<T>, wyxy w y x y -> Vector4<T>, wyxz w y x z -> Vector4<T>, wyxw w y x w -> Vector4<T>, wyyx w y y x -> Vector4<T>, wyyy w y y y -> Vector4<T>, wyyz w y y z -> Vector4<T>, wyyw w y y w -> Vector4<T>, wyzx w y z x -> Vector4<T>, wyzy w y z y -> Vector4<T>, wyzz w y z z -> Vector4<T>, wyzw w y z w -> Vector4<T>, wywx w y w x -> Vector4<T>, wywy w y w y -> Vector4<T>, wywz w y w z -> Vector4<T>, wyww w y w w -> Vector4<T>, wzxx w z x x -> Vector4<T>, wzxy w z x y -> Vector4<T>, wzxz w z x z -> Vector4<T>, wzxw w z x w -> Vector4<T>, wzyx w z y x -> Vector4<T>, wzyy w z y y -> Vector4<T>, wzyz w z y z -> Vector4<T>, wzyw w z y w -> Vector4<T>, wzzx w z z x -> Vector4<T>, wzzy w z z y -> Vector4<T>, wzzz w z z z -> Vector4<T>, wzzw w z z w -> Vector4<T>, wzwx w z w x -> Vector4<T>, wzwy w z w y -> Vector4<T>, wzwz w z w z -> Vector4<T>, wzww w z w w -> Vector4<T>, wwxx w w x x -> Vector4<T>, wwxy w w x y -> Vector4<T>, wwxz w w x z -> Vector4<T>, wwxw w w x w -> Vector4<T>, wwyx w w y x -> Vector4<T>, wwyy w w y y -> Vector4<T>, wwyz w w y z -> Vector4<T>, wwyw w w y w -> Vector4<T>, wwzx w w z x -> Vector4<T>, wwzy w w z y -> Vector4<T>, wwzz w w z z -> Vector4<T>, wwzw w w z w -> Vector4<T>, wwwx w w w x -> Vector4<T>, wwwy w w w y -> Vector4<T>, wwwz w w w z -> Vector4<T>, wwww w w w w -> Vector4<T>,
 }
 
+macro_rules! impl_from {
+    ($(($($fid:ident: $fty:ty, )+) => $to:ty;)+) => {$(
+        impl<T> crate::traits::LocalInto<$to> for ($($fty,)+) {
+            fn local_into(self) -> $to {
+                use std::mem;
+                let ($($fid,)+) = self;
+                #[repr(C)]
+                struct Concat<T> {
+                    $($fid: $fty),+
+                }
+                assert_eq!(mem::size_of::<Concat<T>>(), mem::size_of::<$to>());
+                let concat: Concat<T> = Concat {$($fid),+};
+                unsafe{ mem::transmute_copy::<Concat<T>, $to>(&concat) }
+            }
+        }
+    )+};
+}
+
+impl_from!{
+    (a: T, b: T, ) => Vector2<T>;
+    (a: Vector2<T>, ) => Vector2<T>;
+    (a: T, b: T, c: T, ) => Vector3<T>;
+    (a: T, b: Vector2<T>, ) => Vector3<T>;
+    (a: Vector2<T>, b: T, ) => Vector3<T>;
+    (a: Vector3<T>, ) => Vector3<T>;
+    (a: T, b: T, c: T, d: T, ) => Vector4<T>;
+    (a: T, b: T, c: Vector2<T>, ) => Vector4<T>;
+    (a: T, b: Vector2<T>, c: T, ) => Vector4<T>;
+    (a: T, b: Vector3<T>, ) => Vector4<T>;
+    (a: Vector2<T>, b: T, c: T, ) => Vector4<T>;
+    (a: Vector2<T>, b: Vector2<T>, ) => Vector4<T>;
+    (a: Vector3<T>, b: T, ) => Vector4<T>;
+    (a: Vector4<T>, ) => Vector4<T>;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn create() {
-        let vec1: f32 = vector![0.0];
-        let vec2: Vector2<f32> = vector![0.0, 1.0];
-        let vec3: Vector3<f32> = vector![0.0, 1.0, 2.0];
-        let vec4: Vector4<f32> = vector![0.0, 1.0, 2.0, 3.0];
+        let vec2: Vector2<f32> = vec2![0.0, 1.0];
+        let vec3: Vector3<f32> = vec3![0.0, 1.0, 2.0];
+        let vec4: Vector4<f32> = vec4![0.0, 1.0, 2.0, 3.0];
 
-        let vec1_infer = vector![0.0];
-        let vec2_infer = vector![0.0, 1.0];
-        let vec3_infer = vector![0.0, 1.0, 2.0];
-        let vec4_infer = vector![0.0, 1.0, 2.0, 3.0];
+        let vec2_infer = vec2![0.0, 1.0];
+        let vec3_infer = vec3![0.0, 1.0, 2.0];
+        let vec4_infer = vec4![0.0, 1.0, 2.0, 3.0];
 
-        assert_eq!(vec1, vec1_infer);
         assert_eq!(vec2, vec2_infer);
         assert_eq!(vec3, vec3_infer);
         assert_eq!(vec4, vec4_infer);
 
-        let vec_swizzle = vector![vec2.yx(), 0.0];
+        let vec2_swizzle = vec2![vec4.zy()];
+        let vec3_swizzle = vec3![vec2.yx(), 0.0];
+        let vec4_swizzle = vec4![vec4.xy(), vec2.xy()];
+
+        assert_eq!(vec2_swizzle, vec2![2.0, 1.0]);
+        assert_eq!(vec3_swizzle, vec3![1.0, 0.0, 0.0]);
+        assert_eq!(vec4_swizzle, vec4![0.0, 1.0, 0.0, 1.0]);
     }
 }

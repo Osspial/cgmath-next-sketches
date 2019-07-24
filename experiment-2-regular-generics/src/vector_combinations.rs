@@ -6,11 +6,11 @@ fn main() {
         ("Vector4<T>", 4),
     ];
     let output: &[(&str, usize)] = &[
-        ("T", 1),
         ("Vector2<T>", 2),
         ("Vector3<T>", 3),
         ("Vector4<T>", 4),
     ];
+    let ids = &["a", "b", "c", "d"];
 
     let mut valid_combinations = Vec::new();
 
@@ -33,12 +33,12 @@ fn main() {
                 for i2 in input {
                     buf.push(i2);
                     check_buf!();
-                    buf.pop();
                     for i3 in input {
                         buf.push(i3);
                         check_buf!();
                         buf.pop();
                     }
+                    buf.pop();
                 }
                 buf.pop();
             }
@@ -49,9 +49,9 @@ fn main() {
     valid_combinations.dedup();
     for (c, o) in valid_combinations {
         print!("(");
-        for b in &c {
-            print!("{}, ", b.0);
+        for (b, id) in c.iter().zip(ids.iter()) {
+            print!("{}: {}, ", id, b.0);
         }
-        println!(") -> {}", o);
+        println!(") => {}", o);
     }
 }

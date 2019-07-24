@@ -44,6 +44,58 @@ vector_struct!(struct Vector2(x, y): 2);
 vector_struct!(struct Vector3(x, y, z): 3);
 vector_struct!(struct Vector4(x, y, z, w): 4);
 
+macro_rules! matrix_struct {
+    (struct $Matrix:ident($($dim:ident),+): [$row:literal, $col:literal], $Vector:ident) => {
+        #[repr(C)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        pub struct $Matrix<T> {
+            $(pub $dim: $Vector<T>),+
+        }
+
+        impl<T> From<[T; $row * $col]> for $Matrix<T> {
+            fn from(_elements: [T; $row * $col]) -> $Matrix<T> {
+                unimplemented!()
+                // let [$($dim),+] = elements;
+
+                // Self {
+                //     $($dim),+
+                // }
+            }
+        }
+
+        impl<T> $Matrix<T> {
+        }
+    }
+}
+
+matrix_struct!(struct Matrix2r2c(x, y): [2, 2], Vector2);
+matrix_struct!(struct Matrix2r3c(x, y): [2, 3], Vector3);
+matrix_struct!(struct Matrix2r4c(x, y): [2, 4], Vector4);
+
+matrix_struct!(struct Matrix3r2c(x, y, z): [3, 2], Vector2);
+matrix_struct!(struct Matrix3r3c(x, y, z): [3, 3], Vector3);
+matrix_struct!(struct Matrix3r4c(x, y, z): [3, 4], Vector4);
+
+matrix_struct!(struct Matrix4r2c(x, y, z, w): [4, 2], Vector2);
+matrix_struct!(struct Matrix4r3c(x, y, z, w): [4, 3], Vector3);
+matrix_struct!(struct Matrix4r4c(x, y, z, w): [4, 4], Vector4);
+
+pub type Matrix2<T> = Matrix2r2c<T>;
+pub type Matrix2x2<T> = Matrix2r2c<T>;
+pub type Matrix2x3<T> = Matrix2r3c<T>;
+pub type Matrix2x4<T> = Matrix2r4c<T>;
+
+pub type Matrix3<T> = Matrix3r3c<T>;
+pub type Matrix3x2<T> = Matrix3r2c<T>;
+pub type Matrix3x3<T> = Matrix3r3c<T>;
+pub type Matrix3x4<T> = Matrix3r4c<T>;
+
+pub type Matrix4<T> = Matrix4r4c<T>;
+pub type Matrix4x2<T> = Matrix4r2c<T>;
+pub type Matrix4x3<T> = Matrix4r3c<T>;
+pub type Matrix4x4<T> = Matrix4r4c<T>;
+
+
 macro_rules! array_or_expr {
     ($item:expr) => {{$item}};
     ($($item:expr),+) => {{[$($item),+]}};
